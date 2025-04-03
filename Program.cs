@@ -12,7 +12,8 @@ namespace SQLInjection
             // a path relative to the compiled EXECUTABLE (exe) file.
             // This path CANNOT be relative to the program.cs file (like in Python or JS)
             // THe 
-            string pathToDBFile = @"Data Source=<PATH TO SQLITE DB FILE>\WebSecurity.db"; // <== Replace <PATH TO SQLITE DB FILE> to the path of the file on your computer
+            string pathToDbFile = @"<PATH TO SQLITE DB FILE>/WebSecurity.db"; // <== Replace <PATH TO SQLITE DB FILE> to the path of the file on your computer
+            string connectionString = "Data Source=" + pathToDbFile;
             if (!File.Exists(pathToDBFile))
             {
                 throw new FileNotFoundException("File path is incorrect.");
@@ -21,7 +22,7 @@ namespace SQLInjection
             {
                 Console.WriteLine("File path is correct.");
             }
-            SQLiteConnection conn = new SQLiteConnection(pathToDBFile);
+            SQLiteConnection conn = new SQLiteConnection(connectionString);
   
             SusceptibleToSQLi(conn);
             //NotSusceptibleToSQLi(conn);
