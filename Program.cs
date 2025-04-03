@@ -1,9 +1,12 @@
-﻿using System;
-using System.Data.SQLite;
+using System;
+using Microsoft.Data.Sqlite;
 using System.IO;
 
 namespace SQLInjection
 {
+    /// <summary>
+    /// This is the MacOS version of the files.
+    /// </summary>
     class Program
     {
         static void Main(string[] args)
@@ -12,8 +15,9 @@ namespace SQLInjection
             // a path relative to the compiled EXECUTABLE (exe) file.
             // This path CANNOT be relative to the program.cs file (like in Python or JS)
             // THe 
-            string pathToDBFile = @"Data Source=<PATH TO SQLITE DB FILE>\WebSecurity.db"; // <== Replace <PATH TO SQLITE DB FILE> to the path of the file on your computer
-            if (!File.Exists(pathToDBFile))
+            string pathToDbFile = @"<PATH TO SQLITE DB FILE>/WebSecurity.db"; // <== Replace <PATH TO SQLITE DB FILE> to the path of the file on your computer
+            string connectionString = "Data Source=" + pathToDbFile;
+            if (!File.Exists(pathToDbFile))
             {
                 throw new FileNotFoundException("File path is incorrect.");
             }
@@ -21,14 +25,14 @@ namespace SQLInjection
             {
                 Console.WriteLine("File path is correct.");
             }
-            SQLiteConnection conn = new SQLiteConnection(pathToDBFile);
+            SqliteConnection conn = new SqliteConnection(connectionString);
   
             SusceptibleToSQLi(conn);
             //NotSusceptibleToSQLi(conn);
             //FixSQLi(conn);
         }
 
-        public static void SusceptibleToSQLi(SQLiteConnection conn)
+        public static void SusceptibleToSQLi(SqliteConnection conn)
         {
             try
             {
@@ -39,7 +43,7 @@ namespace SQLInjection
                 Console.WriteLine("Problem connecting to database file.");
             }
 
-            SQLiteCommand cmd = conn.CreateCommand();
+            SqliteCommand cmd = conn.CreateCommand();
 
             string expectedInput = "CA"; // This input is the two letter state code and it an expected input from users of our WebApp
             string maliciousInput = "CA' UNION SELECT ingredients from SecretRecipes;--"; // This input is designed to perform SQL injection. Basically it takes the expected input and adds additional SQL code to get information from another table in our DB.
@@ -49,7 +53,7 @@ namespace SQLInjection
 
             cmd.CommandText = "SELECT BrandName FROM Competition WHERE State='" + state + "'";
 
-            SQLiteDataReader sqlDR = cmd.ExecuteReader();
+            SqliteDataReader sqlDR = cmd.ExecuteReader();
 
             while (sqlDR.Read())
             {
@@ -59,7 +63,7 @@ namespace SQLInjection
             conn.Close();
         }
 
-        public static void NotSusceptibleToSQLi(SQLiteConnection conn)
+        public static void NotSusceptibleToSQLi(SqliteConnection conn)
         {
             try
             {
@@ -70,7 +74,7 @@ namespace SQLInjection
                 Console.WriteLine("Problem connecting to database file.");
             }
 
-            SQLiteCommand cmd = conn.CreateCommand();
+            SqliteCommand cmd = conn.CreateCommand();
 
             string expectedInput = "CA"; // This input is the two letter state code and it an expected input from users of our WebApp
             string maliciousInput = "CA' UNION SELECT ingredients from SecretRecipes;--"; // This input is designed to perform SQL injection. Basically it takes the expected input and adds additional SQL code to get information from another table in our DB.
@@ -81,7 +85,7 @@ namespace SQLInjection
             cmd.CommandText = "SELECT BrandName FROM Competition WHERE State=@state";
             cmd.Parameters.AddWithValue("@state", state);
 
-            SQLiteDataReader sqlDR = cmd.ExecuteReader();
+            SqliteDataReader sqlDR = cmd.ExecuteReader();
 
             while (sqlDR.Read())
             {
@@ -91,7 +95,7 @@ namespace SQLInjection
             conn.Close();
         }
 
-        public static void FixSQLi(SQLiteConnection conn)
+        public static void FixSQLi(SqliteConnection conn)
         {
             try
             {
@@ -102,7 +106,7 @@ namespace SQLInjection
                 Console.WriteLine("Problem connecting to database file.");
             }
 
-            SQLiteCommand cmd = conn.CreateCommand();
+            SqliteCommand cmd = conn.CreateCommand();
 
             string expectedDescription = "%" + "origin%"; // We want to search for descriptions that have origin in them (origin, original, originally, etc.). This is our wildcard string. The concatenation is there because percentage symbols need to be quoted or escaped in some 
             string expectedCaneSugar = "1"; // SQLite doesn't have true Booleans (just 1 or 0 ints), so this is looking for brands that use cane sugar as a sweetener
@@ -112,7 +116,7 @@ namespace SQLInjection
             //sugar = maliciousCaneSugar; // <---- UNCOMMENT LINE TO PERFORM SQLi ATTACK using malicious input
             cmd.CommandText = "SELECT BrandName from Competition WHERE Description LIKE '" + expectedDescription + "' and CaneSugar=" + sugar;
 
-            SQLiteDataReader sqlDR = cmd.ExecuteReader();
+            SqliteDataReader sqlDR = cmd.ExecuteReader();
 
             while (sqlDR.Read())
             {
